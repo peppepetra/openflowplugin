@@ -38,6 +38,7 @@ import org.mockito.InOrder;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.opendaylight.controller.md.sal.binding.api.BindingTransactionChain;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -354,6 +355,8 @@ public class DeviceContextImplTest {
 
     @Test
     public void testProcessReply() {
+    	final NotificationPublishService mockedNotificationPublishService = mock(NotificationPublishService.class);
+        deviceContext.setNotificationPublishService(mockedNotificationPublishService);
         final Error mockedError = mock(Error.class);
         deviceContext.processReply(mockedError);
         verify(messageSpy).spyMessage(any(Class.class), eq(MessageSpy.STATISTIC_GROUP.FROM_SWITCH_PUBLISHED_FAILURE));
@@ -364,6 +367,8 @@ public class DeviceContextImplTest {
 
     @Test
     public void testProcessReply2() {
+    	final NotificationPublishService mockedNotificationPublishService = mock(NotificationPublishService.class);
+        deviceContext.setNotificationPublishService(mockedNotificationPublishService);
         final MultipartReply mockedMultipartReply = mock(MultipartReply.class);
         final Xid dummyXid = new Xid(DUMMY_XID);
         deviceContext.processReply(dummyXid, Lists.newArrayList(mockedMultipartReply));
@@ -504,12 +509,12 @@ public class DeviceContextImplTest {
         deviceContext.processFlowRemovedMessage(flowRemovedBld.build());
 
         Mockito.verify(itemLifecycleListener).onRemoved(flowToBeRemovedPath);
-        Mockito.verify(mockedNotificationPublishService, Mockito.never()).offerNotification(Matchers.any(Notification.class));
+        Mockito.verify(mockedNotificationPublishService).offerNotification(Matchers.any(Notification.class));
 
         Mockito.when(deviceManager.getIsNotificationFlowRemovedOff()).thenReturn(false);
         deviceContext.processFlowRemovedMessage(flowRemovedBld.build());
 
-        Mockito.verify(mockedNotificationPublishService).offerNotification(Matchers.any(Notification.class));
+        Mockito.verify(mockedNotificationPublishService, VerificationModeFactory.times(3)).offerNotification(Matchers.any(Notification.class));
     }
 
     @Test
@@ -528,7 +533,7 @@ public class DeviceContextImplTest {
         ((DeviceContextImpl) deviceContext).setExtensionConverterProvider(mockedExtensionConverterProvider);
         deviceContext.processExperimenterMessage(experimenterMessage);
 
-        verify(mockedNotificationPublishService).offerNotification(any(ExperimenterMessageFromDev.class));
+        verify(mockedNotificationPublishService, VerificationModeFactory.times(2)).offerNotification(any(ExperimenterMessageFromDev.class));
     }
 
     @Test
